@@ -1,0 +1,388 @@
+---
+title: "Membrane Simulation Data Visualizations"
+author: "Me"
+date: "2024-10-20"
+output: html_document
+---
+```{r}
+library(tidyverse)
+library(stringr)
+
+```
+
+```{r}
+#====================================================================================================================
+#Find the average for EDP components (atoms and water) across three replicates
+#====================================================================================================================
+average <- function(file,transformed_file,variable){
+  read_delim(file) 
+  file_path <- file
+  content <- readLines(file_path)
+  cleaned_content <- str_squish(content)
+  writeLines(cleaned_content, 
+             transformed_file) #change file name
+  edp1 <- read_delim(transformed_file) #file name as above
+  edp.1<-edp1 %>% 
+    filter(z>=0.1)
+  edp.rev1 <- edp1 %>% 
+    filter(z<=-0.1)
+  edp1.rev1 <- edp.rev1 %>% 
+    arrange(desc(z))
+  ####COMBINE TOP AND BOTTOM HALF OF DATA, comment out parameters that do not apply
+  edp.1$Acid = edp.1$Acid +edp1.rev1$Acid
+  #edp.1$Ser = edp.1$Ser +edp1.rev1$Ser
+  edp.1$Phos = edp.1$Phos +edp1.rev1$Phos
+  edp.1$Gly = edp.1$Gly +edp1.rev1$Gly
+  edp.1$Carb = edp.1$Carb +edp1.rev1$Carb
+  edp.1$CH1 = edp.1$CH1 +edp1.rev1$CH1
+  edp.1$CH1E = edp.1$CH1E +edp1.rev1$CH1E
+  edp.1$CH2 = edp.1$CH2 +edp1.rev1$CH2
+  edp.1$CH2E = edp.1$CH2E +edp1.rev1$CH2E
+  edp.1$CH3 = edp.1$CH3 +edp1.rev1$CH3
+  edp.1$CH3E = edp.1$CH3E +edp1.rev1$CH3E
+  edp.1$CH = edp.1$CH +edp1.rev1$CH
+  edp.1$total = edp.1$total +edp1.rev1$total
+  variable <- edp.1
+} #Function fo find averages of all-atom________________________________________________________________
+
+average_ua <- function(file,transformed_file,variable){
+  read_delim(file) 
+  file_path <- file 
+  content <- readLines(file_path)
+  cleaned_content <- str_squish(content)
+  writeLines(cleaned_content, 
+             transformed_file) 
+  edp1 <- read_delim(transformed_file) 
+  edp.1<-edp1 %>% 
+    filter(z>=0.1)
+  edp.rev1 <- edp1 %>% 
+    filter(z<=-0.1)
+  edp1.rev1 <- edp.rev1 %>% arrange(desc(z))
+  edp.1$Acid = edp.1$Acid +edp1.rev1$Acid
+  #edp.1$Ser = edp.1$Ser +edp1.rev1$Ser
+  edp.1$Phos = edp.1$Phos +edp1.rev1$Phos
+  edp.1$Gly = edp.1$Gly +edp1.rev1$Gly
+  edp.1$Carb = edp.1$Carb +edp1.rev1$Carb
+  edp.1$CH2 = edp.1$CH2 +edp1.rev1$CH2
+  edp.1$CH2E = edp.1$CH2E +edp1.rev1$CH2E
+  #edp.1$CH3 = edp.1$CH3 +edp1.rev1$CH3
+  edp.1$CH3E = edp.1$CH3E +edp1.rev1$CH3E
+  edp.1$CH1E = edp.1$CH1E +edp1.rev1$CH1E
+  edp.1$total = edp.1$total +edp1.rev1$total
+  variable <- edp.1
+} #Function fo find averages of united-atom________________________________________________________________
+
+#CHANGE
+#ALL_ATOM
+t1_edp<-average("",t1_edp)
+t2_edp<-average("","",t2_edp)
+t3_edp<-average("","",t3_edp)
+
+#UNITED_ATOM
+t1_ua_edp<-average_ua("","",t1_ua_edp)
+t2_ua_edp<-average_ua("","",t2_ua_edp)
+t3_ua_edp<-average_ua("","",t3_ua_edp)
+##############FOR WATER########################################################
+average_wat <- function(file,transformed_file,variable){
+  read_delim(file)
+  file_path <- file #Change the file path
+  content <- readLines(file_path)
+  cleaned_content <- str_squish(content)
+  writeLines(cleaned_content, transformed_file) #change file name
+  wat_edp1 <- read_delim(transformed_file) #file name as above
+  wat_edp.1<-wat_edp1 %>% filter(z>=0.1)
+  wat_edp.rev1 <- wat_edp1 %>% filter(z<=-0.1)
+  wat_edp1.rev1 <- wat_edp.rev1 %>% arrange(desc(z))
+  wat_edp.1$Wat = wat_edp.1$Wat + wat_edp1.rev1$Wat
+  wat_edp.1$total = wat_edp.1$total + wat_edp1.rev1$total
+  variable <- wat_edp.1
+}
+#CHANGE
+###ALL ATOM
+t1_wat_edp<-average_wat("","",wat1_popa_edp)
+t2_wat_edp<-average_wat("","",wat2_popa_edp)
+t3_wat_edp<-average_wat("","",wat3_popa_edp)
+
+##UNITED ATOM
+t1_ua_wat_edp<-average_wat("","",wat1_poua_edp)
+t2_ua_wat_edp<-average_wat("","",wat2_poua_edp)
+t3_ua_wat_edp<-average_wat("","",wat3_poua_edp)
+```
+
+```{r}
+#ALL-ATOM
+avg_edp <- (t1_edp + t2_edp + t3_edp)/3
+avg_wat_edp <- (t1_wat_edp + t2_wat_edp +t3_wat_edp)/3
+total <- avg_edp$total + avg_wat_edp$total
+total_edp<-data.frame(avg_wat_edp$z, total)
+
+#UNITED ATOM
+avg_ua_edp<-(t1_ua_edp + t2_ua_edp + t3_ua_edp)/3
+avg_ua_wat_edp<-(t1_ua_wat_edp + t2_ua_wat_edp +t3_ua_wat_edp)/3
+total_ua <- avg_ua_edp$total + avg_ua_wat_edp$total
+total_ua_edp<-data.frame(avg_ua_wat_edp$z, total)
+
+```
+
+
+
+```{r}
+ggplot()+
+  #geom_line(data =avg_edp%>% filter(z <= 30),
+   #         mapping = aes(x=z,y=Ser,linetype = "All-Atom"),
+    #        color = "red",
+     #       size = 1.5)+
+  #geom_line(data =avg_ua_edp%>% filter(z <= 30),
+   #         mapping = aes(x=z,y=Ser,linetype = "United-Atom"), 
+    #        color = "red",
+     #       linetype = "dotted",
+      #      size = 1.5)+
+  geom_line(data =avg_edp%>% filter(z <= 30),
+            mapping = aes(x=z,y=Acid,linetype = "All-Atom"), 
+            color = "green4",
+            size = 1.5)+
+  geom_line(data =avg_ua_edp%>% filter(z <= 30),
+            mapping = aes(x=z,y=Acid,linetype = "All-Atom"), 
+            color = "green4",
+            size = 1.5)+
+  
+  geom_line(data =avg_edp%>% filter(z <= 30),
+            mapping = aes(x=z,y=Phos,linetype = "All-Atom"), 
+            color = "green4",
+            size = 1.5)+
+  geom_line(data =avg_ua_edp%>% filter(z <= 30), 
+            mapping = aes(x=z,y=Phos,linetype = "United-Atom"), 
+            color = "green4",
+            linetype = "dotted",
+            size = 1.5)+
+  
+  geom_line(data =avg_edp%>% filter(z <= 30), 
+            mapping = aes(x=z,y=Gly,linetype = "All-Atom"), 
+            color = "green",
+            size = 1.5)+
+  geom_line(data =avg_ua_edp%>% filter(z <= 30), 
+            mapping = aes(x=z,y=Gly,linetype = "United-Atom"), 
+            color = "green",
+            linetype = "dotted",
+            size = 1.5)+
+  
+  geom_line(data =avg_edp%>% filter(z <= 30), 
+            mapping = aes(x=z,y=Carb,linetype="All-Atom"), 
+            color = "orange",
+            size = 1.5)+
+  geom_line(data =avg_ua_edp%>% filter(z <= 30), 
+            mapping = aes(x=z,y=Carb,linetype="United-Atom"), 
+            color = "orange",
+            linetype = "dotted",
+            size = 1.5)+
+  
+  geom_line(data =avg_edp%>% filter(z <= 30), 
+            mapping = aes(x=z,y=CH2,linetype="All-Atom"),
+            color = "purple",
+            size = 1.5)+
+  #geom_line(data =avg_ua_edp%>% filter(z <= 30), 
+  #          mapping = aes(x=z,y=CH2,linetype="United-Atom"), 
+   #         color = "purple",
+    #        linetype = "dotted",
+     #       size = 1.5)+
+  geom_line(data =avg_ua_edp%>% filter(z <= 30), 
+            mapping = aes(x=z,y=CH2E,linetype="United-Atom"), 
+            color = "purple",
+            linetype = "dotted",
+            size = 1.5)+
+  
+  #geom_line(data =avg_edp, mapping = aes(x=z,y=CH2E), color = "purple4")+
+  
+  geom_line(data =avg_edp%>% filter(z <= 30), 
+            mapping = aes(x=z,y=CH3,linetype="All-Atom"), 
+            color = "cyan4",
+            size = 1.5)+
+  geom_line(data =avg_ua_edp%>% filter(z <= 30), 
+            mapping = aes(x=z,y=CH3E,linetype="United-Atom"), 
+            color = "cyan4",
+            linetype = "dotted",
+            size = 1.5)+
+  
+  geom_line(data =avg_edp%>% filter(z <= 30),
+            mapping = aes(x=z,y=CH, linetype="All-Atom"), 
+            color = "orange4",
+            size = 1.5)+
+  geom_line(data =avg_ua_edp%>% filter(z <= 30), mapping = aes(x=z,y=CH1E,linetype="United-Atom"), 
+            color = "orange4",
+            linetype="dotted",
+            size = 1.5)+
+  
+  geom_line(data =avg_wat_edp%>% filter(z <= 30), 
+            mapping = aes(x=z,y=Wat,linetype="All-Atom"), 
+            color = "blue2",
+            size = 1.5)+
+  geom_line(data =avg_ua_wat_edp%>% filter(z <= 30), 
+            mapping = aes(x=z,y=Wat,linetype="United-Atom"), 
+            color = "blue2",
+            linetype = "dotted",
+            size = 1.5)+
+  
+  geom_line(data =total_edp%>% filter(avg_wat_edp.z <= 30), 
+            mapping = aes(x=avg_wat_edp.z,y=total,linetype="All-Atom"),
+            color = "grey4",
+            size = 1.5)+
+  geom_line(data =total_ua_edp%>% filter(avg_ua_wat_edp.z <= 30), 
+            mapping = aes(x=avg_ua_wat_edp.z,y=total,linetype="United-Atom"),
+            color = "grey4",
+            linetype = "dotted",
+            size = 1.5)+
+  
+    # Add labels for each line
+  #geom_text(data = avg_edp, aes(x = 35, y = 0.02, label = "Ser"), color = "red", vjust = -0.5) +
+  geom_text(data = avg_edp, aes(x = 35, y = 0.02, label = "Acid"), color = "red", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 35, y = 0.05, label = "Phos"), color = "green4", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 35, y = 0.1, label = "Gly"), color = "green", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 35, y = 0.15, label = "Carb"), color = "orange", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 35, y = 0.18, label = "CH2"), color = "purple", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 35, y = 0.38, label = "CH"), color = "orange4", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 35, y = 0.35, label = "CH2E"), color = "purple4", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 35, y = 0.23, label = "CH3"), color = "cyan4", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 35, y = 0.45, label = "CH3E"), color = "cyan4", vjust = -0.5) +
+  
+  geom_text(data = avg_wat_edp, aes(x = 35, y = 0.65, label = "Wat"), color = "blue2", vjust = -0.5) +
+  
+  geom_text(data = total_edp, aes(x = 35, y = 0.75, label = "Total"), color = "grey4", vjust = -0.5) +
+ 
+  
+  labs(title = "POPA All-Atom and United Atom Electron Density Profiles (EDP)", y = "EDP") +
+  
+  theme_minimal()
+
+```
+
+```{r}
+ggplot()+
+  geom_line(data =avg_edp, mapping = aes(x=z,y=Ser),, color = "red")+
+  
+  geom_line(data =avg_edp, mapping = aes(x=z,y=Phos),, color = "green4")+
+  
+  geom_line(data =avg_edp, mapping = aes(x=z,y=Gly),, color = "green")+
+  
+  geom_line(data =avg_edp, mapping = aes(x=z,y=Carb),, color = "orange")+
+  
+  geom_line(data =avg_edp, mapping = aes(x=z,y=CH2),, color = "purple")+
+  
+  #geom_line(data =avg_edp, mapping = aes(x=z,y=CH2E),, color = "purple4")+
+  
+  geom_line(data =avg_edp, mapping = aes(x=z,y=CH3),, color = "cyan4")+
+  
+  #geom_line(data =avg_edp, mapping = aes(x=z,y=CH1E),, color = "orange4")+
+  
+  geom_line(data =avg_wat_edp, mapping = aes(x=z,y=Wat),, color = "blue2")+
+  
+  geom_line(data =total_edp, mapping = aes(x=avg_wat_edp.z,y=total),, color = "grey4")+
+  
+    # Add labels for each line
+  geom_text(data = avg_edp, aes(x = 45, y = 0.02, label = "Ser"), color = "red", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 45, y = 0.05, label = "Phos"), color = "green4", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 45, y = 0.1, label = "Gly"), color = "green", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 45, y = 0.15, label = "Carb"), color = "orange", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 45, y = 0.18, label = "CH2"), color = "purple", vjust = -0.5) +
+  
+  #geom_text(data = avg_edp, aes(x = 45, y = 0.38, label = "CH1E"), color = "orange4", vjust = -0.5) +
+  
+  #geom_text(data = avg_edp, aes(x = 45, y = 0.35, label = "CH2E"), color = "purple4", vjust = -0.5) +
+  
+  geom_text(data = avg_edp, aes(x = 45, y = 0.23, label = "CH3"), color = "cyan4", vjust = -0.5) +
+  
+  #geom_text(data = avg_edp, aes(x = 45, y = 0.3, label = "CH3E"), color = "cyan4", vjust = -0.5) +
+  
+  geom_text(data = avg_wat_edp, aes(x = 45, y = 0.35, label = "Wat"), color = "blue2", vjust = -0.5) +
+  
+  geom_text(data = total_edp, aes(x = 45, y = 0.45, label = "Total"), color = "grey4", vjust = -0.5) +
+  
+  labs(title = "DPPS All-Atom Electron Density Profiles (EDP)", y = "EDP") +
+  
+  theme_minimal()
+
+```
+
+```{r}
+ggplot() +
+  # All-Atom solid lines
+  geom_line(data = avg_edp, mapping = aes(x = z, y = Ser, linetype = "All-Atom"), color = "red", size = 1.5) +
+  geom_line(data = avg_ua_edp, mapping = aes(x = z, y = Ser, linetype = "United-Atom"), color = "red", linetype = "dotted", size = 1.5) +
+
+  geom_line(data = avg_edp, mapping = aes(x = z, y = Phos, linetype = "All-Atom"), color = "green4", size = 1.5) +
+  geom_line(data = avg_ua_edp, mapping = aes(x = z, y = Phos, linetype = "United-Atom"), color = "green4", linetype = "dotted", size = 1.5) +
+
+  geom_line(data = avg_edp, mapping = aes(x = z, y = Gly, linetype = "All-Atom"), color = "green", size = 1.5) +
+  geom_line(data = avg_ua_edp, mapping = aes(x = z, y = Gly, linetype = "United-Atom"), color = "green", linetype = "dotted", size = 1.5) +
+
+  geom_line(data = avg_edp, mapping = aes(x = z, y = Carb, linetype = "All-Atom"), color = "orange", size = 1.5) +
+  geom_line(data = avg_ua_edp, mapping = aes(x = z, y = Carb, linetype = "United-Atom"), color = "orange", linetype = "dotted", size = 1.5) +
+
+  geom_line(data = avg_edp, mapping = aes(x = z, y = CH2, linetype = "All-Atom"), color = "purple", size = 1.5) +
+  geom_line(data = avg_ua_edp, mapping = aes(x = z, y = CH2E, linetype = "United-Atom"), color = "purple", linetype = "dotted", size = 1.5) +
+
+  geom_line(data = avg_edp, mapping = aes(x = z, y = CH3, linetype = "All-Atom"), color = "cyan4", size = 1.5) +
+  geom_line(data = avg_ua_edp, mapping = aes(x = z, y = CH3E, linetype = "United-Atom"), color = "cyan4", linetype = "dotted", size = 1.5) +
+
+  geom_line(data = avg_edp, mapping = aes(x = z, y = CH, linetype = "All-Atom"), color = "orange4", size = 1.5) +
+  geom_line(data = avg_ua_edp, mapping = aes(x = z, y = CH1E, linetype = "United-Atom"), color = "orange4", linetype = "dotted", size = 1.5) +
+
+  geom_line(data = avg_wat_edp, mapping = aes(x = z, y = Wat, linetype = "All-Atom"), color = "blue2", size = 1.5) +
+  geom_line(data = avg_ua_wat_edp, mapping = aes(x = z, y = Wat, linetype = "United-Atom"), color = "blue2", linetype = "dotted", size = 1.5) +
+
+  geom_line(data = total_edp, mapping = aes(x = avg_wat_edp.z, y = total, linetype = "All-Atom"), color = "grey4", size = 1.5) +
+  geom_line(data = total_ua_edp, mapping = aes(x = avg_ua_wat_edp.z, y = total, linetype = "United-Atom"), color = "grey4", linetype = "dotted", size = 1.5) +
+
+  # Add labels for each line
+  geom_text(data = avg_edp, aes(x = 45, y = 0.02, label = "Ser"), color = "red", vjust = -0.5) +
+  geom_text(data = avg_edp, aes(x = 45, y = 0.05, label = "Phos"), color = "green4", vjust = -0.5) +
+  geom_text(data = avg_edp, aes(x = 45, y = 0.1, label = "Gly"), color = "green", vjust = -0.5) +
+  geom_text(data = avg_edp, aes(x = 45, y = 0.15, label = "Carb"), color = "orange", vjust = -0.5) +
+  geom_text(data = avg_edp, aes(x = 45, y = 0.18, label = "CH2"), color = "purple", vjust = -0.5) +
+  geom_text(data = avg_edp, aes(x = 45, y = 0.38, label = "CH"), color = "orange4", vjust = -0.5) +
+  geom_text(data = avg_edp, aes(x = 45, y = 0.23, label = "CH3"), color = "cyan4", vjust = -0.5) +
+  geom_text(data = avg_wat_edp, aes(x = 45, y = 0.35, label = "Wat"), color = "blue2", vjust = -0.5) +
+  geom_text(data = total_edp, aes(x = 45, y = 0.45, label = "Total"), color = "grey4", vjust = -0.5) +
+
+  labs(title = "POPS All-Atom and United Atom Electron Density Profiles (EDP)", y = "EDP") +
+
+  # Customize the legend for linetypes
+  scale_linetype_manual(values = c("All-Atom" = "solid", "United-Atom" = "dotted"),
+                        labels = c("All-Atom" = "All-Atom", "United-Atom" = "United-Atom")) +
+
+  theme_minimal()
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
